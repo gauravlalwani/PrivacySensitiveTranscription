@@ -1,0 +1,4 @@
+*.jpg
+features.pickle
+hog_features.csv
+hog_features.csv.zip
