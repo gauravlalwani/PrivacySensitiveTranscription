@@ -1,7 +1,7 @@
 import cv2
 import numpy
 import os
-import pickle
+import _pickle as pickle
 
 from optparse import OptionParser
 
