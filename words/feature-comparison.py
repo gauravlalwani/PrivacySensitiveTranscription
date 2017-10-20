@@ -1,14 +1,14 @@
 import cv2
 import _pickle as pickle
 
-from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+from scipy import spatial
 
 def main():
     print('Working...')
 
     index = {}
     results = {}
-    threshold = 0.9
+    threshold = 0.5
 
     # load data
     with open('features.pickle', 'rb') as handle:
@@ -16,19 +16,22 @@ def main():
         index = unpickler.load()
 
     while True:
-        image_0 = input('Input an image to compare: ')
-        feature_0 = index[filename]
+        image_q = input('Input an image to compare: ')
+        feature_q = index[image_q]
 
         print('Calculating cosine similarities...')
+        for image_n, feature_n in index.items():
+            score = 1 - spatial.distance.cosine(feature_n, feature_q)
+            if score > threshold:
+                results[image_n] = score
+        
+        del results[image_q]
 
-        results = {image_n: cos_sim(feature_0, feature_n)     \
-                  for image_n, feature_n in index.iteritems() \
-                  if name is not filename and cos_sim(feature_0, feature_n) > threshold}
-
-        results = sorted(results.items(), key=itemgetter(0))
+        results = [(image_n, results[image_n]) for image_n in \
+                  sorted(results, key=results.get, reverse=True)]
 
         print('Results:')
-        for image_n, score in results.items():
+        for image_n, score in results:
             print('{0}\t{1}'.format(image_n, score))
 
             # im = cv2.imread(image_n, 0)

@@ -59,8 +59,8 @@ def main():
         
             im = cv2.imread(filename, 0)
             if im.shape[0] > height_u:
-                unacceptable.append(filename)
-                continue
+               unacceptable.append(filename)
+               continue
         
             # resize image and compute features
             acceptable.append(filename)
