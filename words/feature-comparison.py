@@ -7,7 +7,6 @@ def main():
     print('Working...')
 
     index = {}
-    results = {}
     threshold = 0.5
 
     # load data
@@ -16,7 +15,14 @@ def main():
         index = unpickler.load()
 
     while True:
+        results = {}
+
         image_q = input('Input an image to compare: ')
+
+        if image_q not in index:
+            print('Query image not found, please try another.')
+            continue
+
         feature_q = index[image_q]
 
         print('Calculating cosine similarities...')
