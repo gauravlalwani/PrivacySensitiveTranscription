@@ -49,7 +49,7 @@ def main():
                             _nbins = 9)
 
     # evaluate image fles
-    for filename in os.listdir('./'):
+    for filename in os.listdir('./images/'):
         if filename.endswith('.jpg'):
             # check if image meets size and height thresholds
             size = os.path.getsize(filename)
