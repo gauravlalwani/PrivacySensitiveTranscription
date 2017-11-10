@@ -2,4 +2,5 @@
 *.zip
 features.pickle
 hog_features.csv
+*_config.py
 
