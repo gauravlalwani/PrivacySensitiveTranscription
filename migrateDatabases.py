@@ -24,6 +24,14 @@ cshTransDB.authenticate(db_config.TRANSCRIPTION_DB_USER,
                         db_config.TRANSCRIPTION_DB_PASS)
 cshCollection = cshTransDB[db_config.TRANS_DB_MeetingMinColl]
 
+# helper function to get file size
+def getFileSize(record):
+    if 'size' in record:
+        return record['size']
+
+    return os.path.getsize(zooniverse_config.Image_Folder + \
+                           record['anonymizedImageFile'])
+
 # fetch the image filenames in a python list
 for record in claciCollection.find():
     cshCollection.insert_one({
@@ -48,10 +56,4 @@ for record in claciCollection.find():
         }
     })
 
-# helper function to get file size
-def getFileSize(record):
-    if 'size' in record:
-        return record['size']
 
-    return os.path.getsize(zooniverse_config.Image_Folder + \
-                           resultItem['anonymizedImageFile'])
