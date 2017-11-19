@@ -1,7 +1,9 @@
 # !/usr/bin/python
 # This program aims to migrate records to a new database using an updated schema
 
-from pymogno import MongoClient
+from pymongo import MongoClient
+
+import os
 
 import db_config
 import old_db_config
@@ -23,25 +25,33 @@ cshTransDB.authenticate(db_config.TRANSCRIPTION_DB_USER,
 cshCollection = cshTransDB[db_config.TRANS_DB_MeetingMinColl]
 
 # fetch the image filenames in a python list
-for resultItem in calciCollection.find():
+for record in claciCollection.find():
     cshCollection.insert_one({
-        '_id': resultItem['_id'],
+        '_id' : record['_id'],
         'file': {
-            'anonName': resultItem['anonymizedImageFile'],
-            'height'  : resultItem['height'],
-            'name'    : resultItem['locationBasedImageFile'],
+            'anonName': record['anonymizedImageFile'],
+            'height'  : record['height'],
+            'name'    : record['locationBasedImageFile'],
             'path'    : zooniverse_config.Image_Folder,
-            'size'    : resultItem['size'],
-            'width'   : resultItem['width'],
+            'size'    : getFileSize(record),
+            'width'   : record['width'],
         },
         'page': {
-            'lineNum'      : resultItem['numLine'],
-            'registerNum'  : resultItem['register'],
-            'wordNum'      : resultItem['numWord'],
-            'pageNum'      : resultItem['numPage'],
+            'lineNum'      : record['numLine'],
+            'registerNum'  : record['register'],
+            'wordNum'      : record['numWord'],
+            'pageNum'      : record['numPage'],
             'pixelLocation': {
-                'x': resultItem['locationX'],
-                'y': resultItem['locationY']
+                'x': record['locationX'],
+                'y': record['locationY']
             }
         }
     })
+
+# helper function to get file size
+def getFileSize(record):
+    if 'size' in record:
+        return record['size']
+
+    return os.path.getsize(zooniverse_config.Image_Folder + \
+                           resultItem['anonymizedImageFile'])
