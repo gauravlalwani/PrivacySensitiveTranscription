@@ -3,6 +3,7 @@
 features.pickle
 hog_features.csv
 *_config.py
+*.pyc
 __pycache__/
 venv/
 
