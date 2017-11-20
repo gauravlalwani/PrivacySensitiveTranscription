@@ -5,55 +5,48 @@ from pymongo import MongoClient
 
 import os
 
-import db_config
-import old_db_config
+import csh_db_config
+import claci_db_config
 import zooniverse_config
 
 # mongodb client
-mongoConn = MongoClient(old_db_config.DB_HOST + ':' + str(db_config.DB_PORT))
+mongoConn = MongoClient(csh_db_config.DB_HOST + ':' + str(csh_db_config.DB_PORT))
 
 # connection to old db
-claciTransDB = mongoConn[old_db_config.TRANSCRIPTION_DB_NAME]
-claciTransDB.authenticate(old_db_config.TRANSCRIPTION_DB_USER,
-                          old_db_config.TRANSCRIPTION_DB_PASS)
-claciCollection = claciTransDB[db_config.TRANS_DB_MeetingMinColl]
+claciTransDB = mongoConn[claci_db_config.TRANSCRIPTION_DB_NAME]
+claciTransDB.authenticate(claci_db_config.TRANSCRIPTION_DB_USER,
+                          claci_db_config.TRANSCRIPTION_DB_PASS)
+claciCollection = claciTransDB[claci_db_config.TRANS_DB_MeetingMinColl]
 
 # connection to new db
-cshTransDB = mongoConn[db_config.TRANSCRIPTION_DB_NAME]
-cshTransDB.authenticate(db_config.TRANSCRIPTION_DB_USER,
-                        db_config.TRANSCRIPTION_DB_PASS)
-cshCollection = cshTransDB[db_config.TRANS_DB_MeetingMinColl]
-
-# helper function to get file size
-def getFileSize(record):
-    if 'size' in record:
-        return record['size']
-
-    return os.path.getsize(zooniverse_config.Image_Folder + \
-                           record['anonymizedImageFile'])
+cshTransDB = mongoConn[csh_db_config.TRANSCRIPTION_DB_NAME]
+cshTransDB.authenticate(csh_db_config.TRANSCRIPTION_DB_USER,
+                        csh_db_config.TRANSCRIPTION_DB_PASS)
+cshCollection = cshTransDB[csh_db_config.TRANS_DB_MeetingMinColl]
 
 # fetch the image filenames in a python list
 for record in claciCollection.find():
     cshCollection.insert_one({
         '_id' : record['_id'],
         'file': {
-            'anonName': record['anonymizedImageFile'],
             'height'  : record['height'],
-            'name'    : record['locationBasedImageFile'],
-            'path'    : zooniverse_config.Image_Folder,
-            'size'    : getFileSize(record),
+            'origPath': zooniverse_config.Orig_Image_Folder + \
+                            '{0:04d}'.format(record['numPage']) + '/' + \
+                            record['locationBasedImageFile'],
+            'anonPath': zooniverse_config.Anon_Image_Folder + \
+                            record['anonymizedImageFile'],
+            'size'    : record['size'],
             'width'   : record['width'],
         },
-        'page': {
+        'scan': {
             'lineNum'      : record['numLine'],
-            'registerNum'  : record['register'],
+            'itemGroupNum' : record['register'],
             'wordNum'      : record['numWord'],
-            'pageNum'      : record['numPage'],
+            'scanNum'      : record['numPage'],
             'pixelLocation': {
                 'x': record['locationX'],
                 'y': record['locationY']
             }
         }
     })
-
 
