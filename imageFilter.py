@@ -14,27 +14,27 @@ def main():
     # require file path for images
     parser.add_argument('--path', required=True,
                         nargs=1, action='store', type=str, dest='path',
-                        help='the file path at which the images are stored')
+                        help='The file path at which the images are stored')
 
     # optionally require file size, width, and height lower and upper bound limits
     parser.add_argument('--size_l', required=False,
                         nargs=1, action='store', type=int, dest='size_l',
-                        help='file size lower bound in bytes, inclusive')
+                        help='The file size lower bound in bytes, inclusive')
     parser.add_argument('--size_u', required=False,
                         nargs=1, action='store', type=int, dest='size_u',
-                        help='file size upper bound in bytes, inclusive')
+                        help='The file size upper bound in bytes, inclusive')
     parser.add_argument('--height_l', required=False,
                         nargs=1, action='store', type=int, dest='height_l',
-                        help='file height lower bound in pixels, inclusive')
+                        help='The file height lower bound in pixels, inclusive')
     parser.add_argument('--height_u', required=False,
                         nargs=1, action='store', type=int, dest='height_u',
-                        help='file height upper bound in pixels, inclusive')
+                        help='The file height upper bound in pixels, inclusive')
     parser.add_argument('--width_l', required=False,
                         nargs=1, action='store', type=int, dest='width_l',
-                        help='file width lower bound in pixels, inclusive')
+                        help='The file width lower bound in pixels, inclusive')
     parser.add_argument('--width_u', required=False,
                         nargs=1, action='store', type=int, dest='width_u',
-                        help='file width upper bound in pixels, inclusive')
+                        help='The file width upper bound in pixels, inclusive')
 
     # parse args into variables
     args = vars(parser.parse_args())
