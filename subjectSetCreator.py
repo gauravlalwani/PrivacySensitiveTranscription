@@ -6,6 +6,7 @@ from panoptes_client import SubjectSet, Subject, Project, Panoptes
 from pymongo import MongoClient
 
 import argparse
+import datetime
 import itertools
 
 import csh_db_config
@@ -55,16 +56,42 @@ def main():
     filegroups = list([e for e in t if e != None] for t in itertools.zip_longest(*([iter(filenames)] * n)))
 
     for group in filegroups:
+        displayName = '{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now())
+
+        # create a new subject set
+        subjectSet = SubjectSet()
+        subjectSet.links.project = project
+        subjectSet.display_name = displayName
+        subjectSet.save()
+        subjectSetId = subjectSet.id
+
         # create a new subject for each file and add to the subject set
         for filename in group:
-            # retrieve, verify, and update the record from mongodb
-            record = cshCollection.find_one_and_update({'_id': filename},
-                                                       {'$set': {'canCrowdsource': True}})
+            # retrieve and update the record from mongodb
+            updateQuery = {
+               '$set': {
+                    'canCrowdsource': True
+                },
+               '$set': {
+                   'transcription': {
+                       'numClassifications': 5,
+                       'subjectSetId'      : subjectSetId,
+                       'status'            : 'to send'
+                   }
+               }
+            }
+            record = cshCollection.find_one_and_update({'_id': filename}, updateQuery)
+
+            # verify that the record was found and successfully updated
             if not record:
                 continue
 
-            # update file subject set metadata attribute
-            
+            # create subject set record
+            cshSubjectSets.insert_one({
+                '_id'        : subjectSetId,
+                'status'     : 'to send',
+                'displayName': dsplayName
+            })          
             
 if __name__ == '__main__':
     main()
