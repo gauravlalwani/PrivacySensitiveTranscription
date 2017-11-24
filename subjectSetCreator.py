@@ -27,8 +27,8 @@ def main():
     # parse args into variables and check values
     args = vars(ap.parse_args())
 
-    filename = args['filename']
-    n        = args['n']
+    filename = args['filename'][0] if args['filename'] else None
+    n        = args['n'] if args['n'] else None
 
     if not (n >= 1 and n <= 10000):
         raise ValueError('n must be between 1 and 10000, inclusive')
@@ -36,8 +36,6 @@ def main():
     # connect to zooniverse
     Panoptes.connect(username=zooniverse_config.Zooniverse_USERNAME,
                      password=zooniverse_config.Zooniverse_PASS)
-
-    # find the project using project id and subject set id
     project = Project.find(zooniverse_config.Project_ID)
 
     # connection to mongodb
@@ -47,6 +45,9 @@ def main():
                             csh_db_config.TRANSCRIPTION_DB_PASS)
     cshCollection = cshTransDB[csh_db_config.TRANS_DB_MeetingMinColl]
     cshSubjectSets = cshTransDB[csh_db_config.TRANS_DB_SubjectSets]
+
+    # track subject sets being created
+    subjectsets = []
 
     # get the image filenames in a Python list
     with open(filename) as handle:
@@ -64,6 +65,7 @@ def main():
         subjectSet.display_name = displayName
         subjectSet.save()
         subjectSetId = subjectSet.id
+        subjectsets.append(subjectSetId)
 
         # create a new subject for each file and add to the subject set
         for filename in group:
@@ -91,7 +93,10 @@ def main():
                 '_id'        : subjectSetId,
                 'status'     : 'to send',
                 'displayName': dsplayName
-            })          
+            })
+
+    # print helpful information to the console
+    print('{} subject sets created with the following IDs: {}'.format(len(subjectsets), subjectsets))
             
 if __name__ == '__main__':
     main()

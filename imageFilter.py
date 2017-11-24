@@ -92,6 +92,10 @@ def main():
         for f in acceptable:
             handle.write('{}\n'.format(f))
 
+    # print helpful information to the console
+    print('{} images found, {} of which passed all defined thresholds'.format(len(os.listdir(path)), len(acceptable)))
+    print('Results saved to \'{}\''.format('acceptable_images.txt'))
+
 if __name__ == '__main__':
     main()
 
