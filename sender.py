@@ -1,5 +1,5 @@
 # !/usr/bin/python
-# This program takes a list of images as inputs (i.e., a file) and bins them into subject sets of size n
+# This program takes a list of images as inputs (i.e., a file), adds them to subject sets of size n, and sends the subject sets to Zooniverse
 # Code adapted from Mona Mishra
 
 from panoptes_client import SubjectSet, Subject, Project, Panoptes
@@ -47,7 +47,7 @@ def main():
     cshSubjectSets = cshTransDB[csh_db_config.TRANS_DB_SubjectSets]
 
     # track subject sets being created
-    subjectsets = []
+    subjectSets = []
 
     # get the image filenames in a Python list
     with open(filename) as handle:
@@ -64,11 +64,21 @@ def main():
         subjectSet.links.project = project
         subjectSet.display_name = displayName
         subjectSet.save()
+
         subjectSetId = subjectSet.id
-        subjectsets.append(subjectSetId)
+        subjectSets.append(subjectSetId)
 
         # create a new subject for each file and add to the subject set
         for filename in group:
+            # create a new subject
+            subject = Subject()
+            subject.links.project = project
+            subject.add_location(cshCollection.find_one({'_id': filename})['file']['anonPath'])
+            subject.save()
+
+            # add to subject set
+            subjectSet.add(subject)
+
             # retrieve and update the record from mongodb
             updateQuery = {
                '$set': {
@@ -78,25 +88,27 @@ def main():
                    'transcription': {
                        'numClassifications': 5,
                        'subjectSetId'      : subjectSetId,
-                       'status'            : 'to send'
+                       'status'            : 'sent'
                    }
                }
             }
             record = cshCollection.find_one_and_update({'_id': filename}, updateQuery)
 
-            # verify that the record was found and successfully updated
-            if not record:
-                continue
+        # create subject set record
+        cshSubjectSets.insert_one({
+            '_id'        : subjectSetId,
+            'status'     : 'sent',
+            'displayName': dsplayName
+        })
+        subjectSet.save()
 
-            # create subject set record
-            cshSubjectSets.insert_one({
-                '_id'        : subjectSetId,
-                'status'     : 'to send',
-                'displayName': dsplayName
-            })
+    # add subject sets to the workflow
+    workflow = project.links.workflows[0]
+    workflow.add_subject_sets(subjectSets)
+    workflow.save()
 
     # print helpful information to the console
-    print('{} subject sets created with the following IDs: {}'.format(len(subjectsets), subjectsets))
+    print('{} subject sets created with the following IDs: {}'.format(len(subjectSets), subjectSets))
             
 if __name__ == '__main__':
     main()
