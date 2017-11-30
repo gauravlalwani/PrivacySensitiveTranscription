@@ -27,7 +27,7 @@ def main():
     # parse args into variables and check values
     args = vars(ap.parse_args())
 
-    filename = args['filename'][0] if args['filename'] else None
+    filename = args['filename'] if args['filename'] else None
     n        = args['n'] if args['n'] else None
 
     if not (n >= 1 and n <= 10000):
@@ -70,10 +70,15 @@ def main():
 
         # create a new subject for each file and add to the subject set
         for filename in group:
+            # remove trailing '\n' character
+            filename = filename.rstrip()
+
             # create a new subject
             subject = Subject()
             subject.links.project = project
-            subject.add_location(cshCollection.find_one({'_id': filename})['file']['anonPath'])
+
+            filepath = cshCollection.find_one({'_id': filename})['file']['anonPath']
+            subject.add_location(filepath)
             subject.save()
 
             # add to subject set
@@ -98,14 +103,13 @@ def main():
         cshSubjectSets.insert_one({
             '_id'        : subjectSetId,
             'status'     : 'sent',
-            'displayName': dsplayName
+            'displayName': displayName
         })
         subjectSet.save()
 
     # add subject sets to the workflow
     workflow = project.links.workflows[0]
     workflow.add_subject_sets(subjectSets)
-    workflow.save()
 
     # print helpful information to the console
     print('{} subject sets created with the following IDs: {}'.format(len(subjectSets), subjectSets))
