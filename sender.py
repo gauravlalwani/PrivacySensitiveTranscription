@@ -44,7 +44,6 @@ def main():
     cshTransDB.authenticate(csh_db_config.TRANSCRIPTION_DB_USER,
                             csh_db_config.TRANSCRIPTION_DB_PASS)
     cshCollection = cshTransDB[csh_db_config.TRANS_DB_MeetingMinColl]
-    cshSubjectSets = cshTransDB[csh_db_config.TRANS_DB_SubjectSets]
 
     # track subject sets being created
     subjectSets = []
@@ -79,6 +78,7 @@ def main():
 
             filepath = cshCollection.find_one({'_id': filename})['file']['anonPath']
             subject.add_location(filepath)
+            subject.metadata['ID'] = filename
             subject.save()
 
             # add to subject set
@@ -87,9 +87,7 @@ def main():
             # retrieve and update the record from mongodb
             updateQuery = {
                '$set': {
-                    'canCrowdsource': True
-                },
-               '$set': {
+                   'canCrowdsource': True,
                    'transcription': {
                        'numClassifications': 5,
                        'subjectSetId'      : subjectSetId,
@@ -98,14 +96,6 @@ def main():
                }
             }
             record = cshCollection.find_one_and_update({'_id': filename}, updateQuery)
-
-        # create subject set record
-        cshSubjectSets.insert_one({
-            '_id'        : subjectSetId,
-            'status'     : 'sent',
-            'displayName': displayName
-        })
-        subjectSet.save()
 
     # add subject sets to the workflow
     workflow = project.links.workflows[0]
