@@ -1,5 +1,5 @@
 # !/usr/bin/python
-# This program takes a list of images as inputs (i.e., a file) and bins them into subject sets of size n
+# This program takes a list of images as inputs (i.e., a file), adds them to subject sets of size n, and sends the subject sets to Zooniverse
 # Code adapted from Mona Mishra
 
 from panoptes_client import SubjectSet, Subject, Project, Panoptes
@@ -27,7 +27,7 @@ def main():
     # parse args into variables and check values
     args = vars(ap.parse_args())
 
-    filename = args['filename'][0] if args['filename'] else None
+    filename = args['filename'] if args['filename'] else None
     n        = args['n'] if args['n'] else None
 
     if not (n >= 1 and n <= 10000):
@@ -44,10 +44,9 @@ def main():
     cshTransDB.authenticate(csh_db_config.TRANSCRIPTION_DB_USER,
                             csh_db_config.TRANSCRIPTION_DB_PASS)
     cshCollection = cshTransDB[csh_db_config.TRANS_DB_MeetingMinColl]
-    cshSubjectSets = cshTransDB[csh_db_config.TRANS_DB_SubjectSets]
 
     # track subject sets being created
-    subjectsets = []
+    subjectSets = []
 
     # get the image filenames in a Python list
     with open(filename) as handle:
@@ -64,39 +63,46 @@ def main():
         subjectSet.links.project = project
         subjectSet.display_name = displayName
         subjectSet.save()
+
         subjectSetId = subjectSet.id
-        subjectsets.append(subjectSetId)
+        subjectSets.append(subjectSetId)
 
         # create a new subject for each file and add to the subject set
         for filename in group:
+            # remove trailing '\n' character
+            filename = filename.rstrip()
+
+            # create a new subject
+            subject = Subject()
+            subject.links.project = project
+
+            filepath = cshCollection.find_one({'_id': filename})['file']['anonPath']
+            subject.add_location(filepath)
+            subject.metadata['ID'] = filename
+            subject.save()
+
+            # add to subject set
+            subjectSet.add(subject)
+
             # retrieve and update the record from mongodb
             updateQuery = {
                '$set': {
-                    'canCrowdsource': True
-                },
-               '$set': {
+                   'canCrowdsource': True,
                    'transcription': {
                        'numClassifications': 5,
                        'subjectSetId'      : subjectSetId,
-                       'status'            : 'to send'
+                       'status'            : 'sent'
                    }
                }
             }
             record = cshCollection.find_one_and_update({'_id': filename}, updateQuery)
 
-            # verify that the record was found and successfully updated
-            if not record:
-                continue
-
-            # create subject set record
-            cshSubjectSets.insert_one({
-                '_id'        : subjectSetId,
-                'status'     : 'to send',
-                'displayName': dsplayName
-            })
+    # add subject sets to the workflow
+    workflow = project.links.workflows[0]
+    workflow.add_subject_sets(subjectSets)
 
     # print helpful information to the console
-    print('{} subject sets created with the following IDs: {}'.format(len(subjectsets), subjectsets))
+    print('{} subject sets created with the following IDs: {}'.format(len(subjectSets), subjectSets))
             
 if __name__ == '__main__':
     main()
