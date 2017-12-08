@@ -43,13 +43,13 @@ for row in csv.DictReader(io.StringIO(classification)):
         subject_id = str(subject_id)
         
         #This part of code takes care of the subjects with the old version of workflow that do not have the updated file name
-        #if subject_id in ['1287013','1287029','1287027','1287024','1287018','1287030','1287023','1287019','1287032','1287031','1287020','1287014','1287018','1287015','1287015','1287018']:
-         #   transcription_filename = str(subject_data[subject_id]['image'])
-          #  transcription_filename = transcription_filename.rstrip('.jpg')
+        if subject_id in ['1287013','1287029','1287027','1287024','1287018','1287030','1287023','1287019','1287032','1287031','1287020','1287014','1287018','1287015','1287015','1287018']:
+           transcription_filename = str(subject_data[subject_id]['image'])
+           transcription_filename = transcription_filename.rstrip('.jpg')
             
-        #else:
-        transcription_filename = str(subject_data[subject_id]['Filename'])
-        transcription_filename = transcription_filename.rstrip('.jpg')
+        else:
+          transcription_filename = str(subject_data[subject_id]['Filename'])
+          transcription_filename = transcription_filename.rstrip('.jpg')
             
         
         #Parsing the file/Flattening the JSON output from zooniverse into individual fields
